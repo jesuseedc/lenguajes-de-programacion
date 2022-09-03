@@ -22,19 +22,24 @@
 
 ;; 6.
 (define (abs x)
-  ...)
+  (if (< x 0)
+      (- x)
+      x))
 
 ;; 7.
 (define (inclis1 ls)
-  ...)
+  (map (lambda (x) (+ x 1)) ls))
+
 
 ;; 8.
 (define (even? x)
-  ...)
+  (map (lambda (x) (if (= (modulo x 2) 0) #t #f)) x))
 
 ;; 9.
 (define another-add
   (lambda (n m)
-    ...))
+    (cond ((= n 0) m)
+          ((= m 0) n)
+          (else (+ n m)))))
 
 (provide (all-defined-out))
