@@ -103,7 +103,7 @@
   (test-case "snowball"
     (check-eqv? (snowball 12) 1)
     (check-eqv? (snowball 120) 1)
-    (check-eqv? (snowball 9999) 1))
+    (check-eqv? (snowball 9999) 1)))
   
  ; (test-case "snowball"
   ;  (let ((ns (make-base-namespace)))
