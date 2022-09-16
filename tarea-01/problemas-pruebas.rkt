@@ -92,7 +92,7 @@
   
   (test-case "powerset"
     (check-equal? (powerset '(3 2 1))
-                  '((3 2 1) (3 2) (3 1) (3) (2 1) (2) (1) ()))
+                  '(() (1) (2) (2 1) (3) (3 1) (3 2) (3 2 1)))
     (check-equal? (powerset '())
                   '(())))
   
@@ -103,7 +103,7 @@
   (test-case "snowball"
     (check-eqv? (snowball 12) 1)
     (check-eqv? (snowball 120) 1)
-    (check-eqv? (snowball 9999) 1))
+    (check-eqv? (snowball 9999) 1)))
   
  ; (test-case "snowball"
   ;  (let ((ns (make-base-namespace)))
