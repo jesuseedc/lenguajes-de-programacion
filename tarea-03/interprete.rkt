@@ -5,45 +5,85 @@
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 (define-type Value
-  (numV [value : Number])
-  (strV [value : String])
-  (boolV [value : Boolean]))
-
-(define-type Operator
-  (plusO)
-  (appendO)
-  (numeqO)
-  (streqO))
+  (numV [n : Number])
+  (strV [s : String])
+  (boolV [b : Boolean])
+  (funV [name : Symbol]
+        [rg : Symbol]
+        [body : ExprC]))
 
 (define-type ExprS
-  (numS [value : Number])
-  (strS [value : String])
-  (boolS [value : Boolean])
+  (numS [n : Number])
+  (strS [s : String])
+  (boolS [b : Boolean])
   (idS [name : Symbol])
   (ifS [a : ExprS] [b : ExprS] [c : ExprS])
   (andS [left : ExprS] [right : ExprS])
   (orS [left : ExprS] [right : ExprS])
-  (binopS [op : Operator] [left : ExprS] [right : ExprS])
-  (funS [param : Symbol] [body : ExprS])
   (letS [name : Symbol] [value : ExprS] [body : ExprS])
-  (appS [func : ExprS] [arg : ExprS]))
+  (appS [func : ExprS] [arg : ExprS])
+  (plusS [left : ExprS] [right : ExprS])
+  (numeqS [left : ExprS] [right : ExprS])
+  (streqS [left : ExprS] [right : ExprS])
+  (notS [expr : ExprS])
+  (bminusS [left : ExprS] [right : ExprS])
+  (uminusS [expr : ExprS])
+  (multS [left : ExprS] [right : ExprS])
+  (zeropS [expr : ExprS]))
 
 (define-type ExprC
-  (numC [value : Number])
-  (strC [value : String])
-  (boolC [value : Boolean])
+  (numC [n : Number])
+  (strC [s : String])
+  (boolC [b : Boolean])
+  (plusC [left : ExprC] [right : ExprC])
+  (appC [left : ExprC] [right : ExprC])
+  (numeqC [left : ExprC] [right : ExprC])
+  (streqC [left : ExprC] [right : ExprC])
+  (multC [left : ExprC] [right : ExprC])
   (idC [name : Symbol])
   (ifC [a : ExprC] [b : ExprC] [c : ExprC])
-  (binopC [op : Operator] [left : ExprC] [right : ExprC])
-  (funC [param : Symbol] [body : ExprC])
-  (appC [func : ExprC] [arg : ExprC]))
+  (orC [left : ExprC] [right : ExprC])
+  (andC [left : ExprC] [right : ExprC])
+  (zeroC [expr : ExprC])
+  (letC [name : Symbol] [value : ExprC] [body : ExprC]))
+
+
+(define (bad-arg-to-op-error [op : Symbol] [v : Value])
+  (error 'interp "Bad argument to operator"))
+
+(define (bad-conditional-error [v : Value])
+  (error 'interp "no es booleano"))
+
+(define (unbound-id-error [id : Symbol])
+  (error 'interp (string-append
+                  "Unbound identifier: "
+                    (to-string id))))
+
+(define-type Binding
+  (binding [name : Symbol] [value : Value]))
+
+(define-type-alias Environment (Listof Binding))
+
+(define empty-env empty)
+
+(define (lookup-env name env)
+  (if (empty? env)
+      (unbound-id-error name)
+      (if (eq? name (binding-name (first env)))
+          (binding-value (first env))
+          (lookup-env name (rest env)))))
+
+(define (extend-env name value env)
+  (cons (binding name value) env))
+
+
 
 ;;;;;;;;;;;;;;;
 ;; EVALUADOR ;;
 ;;;;;;;;;;;;;;;
 
-(define (eval [str : S-Exp]) : Value
-  (interp (desugar (parse str))))
+(define (eval [in : S-Exp]) : Value
+  (interp (desugar (parse in)) empty-env))
 
 
 ;;;;;;;;;;;;;
@@ -52,77 +92,118 @@
 
 (define (desugar [e : ExprS]) : ExprC
   (type-case ExprS e
-    [(numS value) (numC value)]
-    [(strS value) (strC value)]
-    [(boolS value) (boolC value)]
-    [(idS name) (numC 0)]
-    [(ifS a b c) (numC 0)]
-    [(andS left right) (numC 0)]
-    [(orS left right) (numC 0)]
-    [(binopS op left right)
-     (binopC op (desugar left) (desugar right))]
-    [(funS param body) (numC 0)]
-    [(letS name value body) (numC 0)]
-    [(appS func arg) (numC 0)]))
+    [(numS n) (numC n)]
+    [(strS s) (strC s)]
+    [(boolS b) (boolC b)]
+    [(idS name) (idC name)]
+    [(ifS a b c) (ifC (desugar a) (desugar b) (desugar c))]
+    [(andS left right) (andC (desugar left) (desugar right))]
+    [(orS left right) (orC (desugar left) (desugar right))]
+    [(letS name value body) (letC name (desugar value) (desugar body))]
+    [(plusS left right) (plusC (desugar left) (desugar right))]
+    [(appS left right) (appC (desugar left) (desugar right))]
+    [(numeqS left right) (numeqC (desugar left) (desugar right))]
+    [(streqS left right) (streqC (desugar left) (desugar right))]
+    [(notS expr) (ifC (desugar expr) (boolC #f) (boolC #t))]
+    [(bminusS left right) (plusC (desugar left) (multC (desugar right) (numC -1)))]
+    [(uminusS expr) (multC (desugar expr) (numC -1))]
+    [(multS left right) (multC (desugar left) (desugar right))]
+    [(zeropS expr) (zeroC (desugar expr))]))
 
 
 ;;;;;;;;;;;;
 ;; INTERP ;;
 ;;;;;;;;;;;;
 
-(define (interp [e : ExprC]) : Value
+
+(define (interp [e : ExprC] [env : Environment]) : Value
   (type-case ExprC e
-    [(numC value) (numV value)]
-    [(strC value) (strV value)]
-    [(boolC value) (boolV value)]
-    [(idC name) (numV 0)]
-    [(ifC a b c) (numV 0)]
-    [(binopC op left right)
-     (let ([left (interp left)])
-       (let ([right (interp right)])
-         (interp-binop op left right)))]
-    [(funC param body) (numV 0)]
-    [(appC func arg) (numV 0)]))
-
-(define (interp-binop [op : Operator]
-                      [left : Value]
-                      [right : Value]) : Value
-  (type-case Operator op
-    [(plusO)
-     (if (numV? left)
-         (if (numV? right)
-             (numV (+ (numV-value left)
-                      (numV-value right)))
-             (error 'binop "argumento incorrecto"))
-         (error 'binop "argumento incorrecto"))]
-
-    [(appendO) 
-      (if (strV? left)
-          (if (strV? right)
-              (strV (string-append (strV-value left)
-                                   (strV-value right)))
-              (error 'binop "argumento incorrecto"))
-          (error 'binop "argumento incorrecto"))]
-          
-    [(numeqO) 
-      (if (numV? left)
-          (if (numV? right)
-              (boolV (equal? (numV-value left)
-                               (numV-value right)))
-              (error 'binop "argumento incorrecto"))
-          (error 'binop "argumento incorrecto"))]
-
-    [(streqO) 
-      (if (strV? left)
-          (if (strV? right)
-              (boolV (string=? (strV-value left)
-                               (strV-value right)))
-              (error 'binop "argumento incorrecto"))
-          (error 'binop "argumento incorrecto"))]))
+    [(numC n) (numV n)]
+    [(strC s) (strV s)]
+    [(boolC b) (boolV b)]
+    [(idC name) (lookup-env name env)]
+    [(letC name value body)
+      (interp body (extend-env name (interp value env) env))]
+    [(ifC a b c)
+      (let ([v1 (interp a env)])
+        (cond [(not (boolV? v1))
+               (bad-conditional-error v1)]
+              [(boolV-b v1) 
+                (interp b env)]
+              [else 
+                (interp c env)]))]
+    [(appC left right) 
+      (let ([v1 (interp left env)]
+            [v2 (interp right env)])
+        (cond [(not (strV? v1))
+               (bad-arg-to-op-error 'append v1)]
+              [(not (strV? v2))
+               (bad-arg-to-op-error 'append v2)]
+              [else
+               (strV (string-append (strV-s v1) (strV-s v2)))]))]
+    [(plusC left right)
+      (let ([v1 (interp left env)]
+            [v2 (interp right env)])
+        (cond [(not (numV? v1))
+               (bad-arg-to-op-error '+ v1)]
+              [(not (numV? v2))
+               (bad-arg-to-op-error '+ v2)]
+              [else
+               (numV (+ (numV-n v1) (numV-n v2)))]))]
+    [(numeqC left right)
+      (cond [(not (numV? (interp left env)))
+             (bad-arg-to-op-error 'numeq? (interp left env))]
+            [(not (numV? (interp right env)))
+             (bad-arg-to-op-error 'numeq? (interp right env))]
+            [else
+             (boolV (equal? (numV-n (interp left env)) (numV-n (interp right env))))])]
+    [(streqC left right)
+      (cond [(not (strV? (interp left env)))
+             (bad-arg-to-op-error 'streq? (interp left env))]
+            [(not (strV? (interp right env)))
+             (bad-arg-to-op-error 'streq? (interp right env))]
+            [else
+             (boolV (equal? (strV-s (interp left env)) (strV-s (interp right env))))])]
+    [(multC left right)
+      (let ([v1 (interp left env)]
+            [v2 (interp right env)])
+        (cond [(not (numV? v1))
+               (bad-arg-to-op-error '* v1)]
+              [(not (numV? v2))
+               (bad-arg-to-op-error '* v2)]
+              [else
+               (numV (* (numV-n v1) (numV-n v2)))]))]
+    [(andC left right)
+      (let ([v1 (interp left env)]
+            [v2 (interp right env)])
+        (cond [(not (boolV? v1))
+               (bad-conditional-error v1)]
+              [(not (boolV? v2))
+               (bad-conditional-error v2)]
+              [else
+               (boolV (and (boolV-b v1) (boolV-b v2)))]))]
+    [(orC left right)
+      (let ([v1 (interp left env)]
+            [v2 (interp right env)])
+        (cond [(not (boolV? v1))
+               (bad-conditional-error v1)]
+              [(not (boolV? v2))
+               (bad-conditional-error v2)]
+              [else
+               (boolV (or (boolV-b v1) (boolV-b v2)))]))]
+    [(zeroC expr)
+      (let ([v (interp expr env)])
+        (cond [(not (numV? v))
+               (bad-arg-to-op-error 'zero? v)]
+              [else
+               (boolV (= (numV-n v) 0))]))]))
 
 ;;;;;;;;;;;;
 ;; PARSER ;;
 ;;;;;;;;;;;;
+
+(define (parse-error e)
+  (error 'parse "malformed expression"))
 
 (define (parse [in : S-Exp]) : ExprS
   (cond
@@ -130,17 +211,103 @@
     [(s-exp-string? in)                            (parse-string in)]
     [(s-exp-match? `true in)                       (boolS #t)]
     [(s-exp-match? `false in)                      (boolS #f)]
-    [(s-exp-match? `{if ANY ...} in)               (parse-if in)]
-    [(s-exp-match? `{and ANY ...} in)              (parse-and in)]
-    [(s-exp-match? `{or ANY ...} in)               (parse-or in)]
-    [(s-exp-match? `{+ ANY ...} in)                (parse-+ in)]
-    [(s-exp-match? `{++ ANY ...} in)               (parse-++ in)]
-    [(s-exp-match? `{num= ANY ...} in)             (parse-num= in)]
-    [(s-exp-match? `{str= ANY ...} in)             (parse-str= in)]
-    [(s-exp-match? `{fun ANY ...} in)              (parse-fun in)]
-    [(s-exp-match? `{let {SYMBOL ANY} ANY ...} in) (parse-let in)]
-    [(s-exp-match? `{ANY ...} in)                  (parse-app in)]
-    [(s-exp-symbol? in)                            (parse-id in)]))
+    [(s-exp-list? in)
+     (let ([ls (s-exp->list in)])
+       (cond [(empty? ls)
+              (parse-error ls)]
+             [else
+              (let ([tag (first ls)])
+                (cond [(s-exp-symbol? tag)
+                       (case (s-exp->symbol tag)
+
+                         [(+)
+                          (if (= (length ls) 3)
+                              (plusS (parse (second ls))
+                                     (parse (third ls)))
+                              (parse-error ls))]
+                         [(++)
+                          (if (= (length ls) 3)
+                              (appS (parse (second ls))
+                                    (parse (third ls)))
+                              (parse-error ls))]
+                         [(num=)
+                          (if (= (length ls) 3)
+                              (numeqS (parse (second ls))
+                                    (parse (third ls)))
+                              (parse-error ls))]
+                         [(str=)
+                          (if (= (length ls) 3)
+                              (streqS (parse (second ls))
+                                    (parse (third ls)))
+                              (parse-error ls))]
+  
+                         [(*)
+                          (if (= (length ls) 3)
+                              (multS (parse (second ls))
+                                     (parse (third ls)))
+                              (parse-error ls))]
+                         [(-)
+                          (let ([len (length ls)])
+                            (cond [(= len 2)
+                                   (uminusS (parse (second ls)))]
+                                  [(= len 3)
+                                   (bminusS (parse (second ls))
+                                            (parse (third ls)))]
+                                  [else
+                                   (parse-error ls)]))]
+                         [(or)
+                          (let ([len (length ls)])
+                            (if (= len 3)
+                                (orS (parse (second ls))
+                                     (parse (third ls)))
+                                (parse-error ls)))]
+                         [(and)
+                          (let ([len (length ls)])
+                            (if (= len 3)
+                                (andS (parse (second ls))
+                                      (parse (third ls)))
+                                (parse-error ls)))]
+                         [(not)
+                          (let ([len (length ls)])
+                            (if (= len 2)
+                                (notS (parse (second ls)))
+                                (parse-error ls)))]
+                         [(if)
+                          (let ([len (length ls)])
+                            (if (= len 4)
+                                (ifS (parse (second ls))
+                                     (parse (third ls))
+                                     (parse (fourth ls)))
+                                (parse-error ls)))]
+                         [(zero?)
+                          (let ([len (length ls)])
+                            (if (= len 2)
+                                (zeropS (parse (second ls)))
+                                (parse-error ls)))]
+                         [(let)
+                          (let ([len (length ls)])
+                            (if (= len 3)
+                                (let ([binding (second ls)]
+                                      [body (third ls)])
+                                  (if (s-exp-list? binding)
+                                      (let ([binding (s-exp->list binding)])
+                                        (if (= (length binding) 2)
+                                            (let ([name (first binding)]
+                                                  [value (second binding)])
+                                              (if (s-exp-symbol? name)
+                                                  (letS (s-exp->symbol name)
+                                                        (parse value)
+                                                        (parse body))
+                                                  (parse-error ls)))
+                                            (parse-error ls)))
+                                      (parse-error ls)))
+                                (parse-error ls)))])]
+                      [else
+                       (parse-error tag)]))]))]
+    [(s-exp-symbol? in)
+     (idS (s-exp->symbol in))]
+    [else (parse-error in)]))
+            
 
 (define (parse-number in)
   (numS (s-exp->number in)))
@@ -148,75 +315,4 @@
 (define (parse-string in)
   (strS (s-exp->string in)))
 
-(define (parse-id in)
-  (idS (s-exp->symbol in)))
-
-(define (parse-if in)
-  (let ([inlst (s-exp->list in)])
-    (if (equal? (length inlst) 4)
-        (ifS (parse (second inlst))
-             (parse (third inlst))
-             (parse (fourth inlst)))
-        (error 'parse "cantidad incorrecta de argumentos para if"))))
-
-(define (parse-and in)
-  (let ([inlst (s-exp->list in)])
-    (if (equal? (length inlst) 3)
-        (andS (parse (second inlst)) (parse (third inlst)))
-        (error 'parse "cantidad incorrecta de argumentos para and"))))
-
-(define (parse-or in)
-  (let ([inlst (s-exp->list in)])
-    (if (equal? (length inlst) 3)
-        (orS (parse (second inlst)) (parse (third inlst)))
-        (error 'parse "cantidad incorrecta de argumentos para or"))))
-
-(define (parse-+ in)
-  (let ([inlst (s-exp->list in)])
-    (if (equal? (length inlst) 3)
-        (binopS (plusO) (parse (second inlst)) (parse (third inlst)))
-        (error 'parse "cantidad incorrecta de argumentos para +"))))
-
-(define (parse-++ in)
-  (let ([inlst (s-exp->list in)])
-    (if (equal? (length inlst) 3)
-        (binopS (appendO) (parse (second inlst)) (parse (third inlst)))
-        (error 'parse "cantidad incorrecta de argumentos para ++"))))
-
-(define (parse-num= in)
-  (let ([inlst (s-exp->list in)])
-    (if (equal? (length inlst) 3)
-        (binopS (numeqO) (parse (second inlst)) (parse (third inlst)))
-        (error 'parse "cantidad incorrecta de argumentos para num="))))
-
-(define (parse-str= in)
-  (let ([inlst (s-exp->list in)])
-    (if (equal? (length inlst) 3)
-        (binopS (streqO) (parse (second inlst)) (parse (third inlst)))
-        (error 'parse "cantidad incorrecta de argumentos para str="))))
-
-(define (parse-fun in)
-  (cond
-    [(s-exp-match? `{fun SYMBOL ANY ...} in)
-     (let ([inlst (s-exp->list in)])
-       (if (equal? (length inlst) 3)
-           (funS (s-exp->symbol (second inlst)) (parse (third inlst)))
-           (error 'parse "funciones deben tener solo un cuerpo")))]
-    [(s-exp-match? `{fun ANY ...} in)
-     (error 'parse "parametros a función deben ser símbolos")]))
-
-(define (parse-let in)
-  (let ([inlst (s-exp->list in)])
-    (if (equal? (length inlst) 3)
-        (letS
-         (s-exp->symbol (first (s-exp->list (second inlst))))
-         (parse (second (s-exp->list (second inlst))))
-         (parse (third inlst)))
-        (error 'parse "cantidad incorrecta de argumentos para let"))))
-
-(define (parse-app in)
-  (let ([inlst (s-exp->list in)])
-    (if (equal? (length inlst) 2)
-        (appS (parse (first inlst)) (parse (second inlst)))
-        (error 'parse "cantidad incorrecta de argumentos en aplicación de funciones"))))
 
