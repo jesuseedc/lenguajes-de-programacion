@@ -1,0 +1,24 @@
+\textbf{4.8[*]. Show exactly where in our implementation of the store these operations take linear time rather than constant time.}
+\begin{itemize}
+    \item Procedure like \texttt{setref!} take linear time because it will go throug the list in store.
+\end{itemize}
+
+\textbf{4.9[*]. Implement the store in constant time by representing it as a Scheme vector. What is lost by using this representation?}
+\begin{itemize}
+    \item Solution implemented in ex4-9.rkt
+    \item \texttt{newref} still in linear time. Allocating locations in constant time is posible by preallocating more locations in advance, but is more complicated. 
+    \item Disadvantage of using Scheme vector to implement the store is that sharing values can be difficult.
+\end{itemize}
+
+\textbf{4.10[*]. Implement the \texttt{begin} expression as specified in exercise 4.4.}
+\begin{itemize}
+    \item Solution implemented in ex4-10.rkt
+\end{itemize}
+
+\textbf{4.11[*]. Implement \texttt{list} from exercise 4.5}
+\begin{itemize}
+    \item Solution implemented in ex4-11.rkt
+\end{itemize}
+
+
+
