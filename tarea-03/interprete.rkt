@@ -49,15 +49,13 @@
 
 
 (define (bad-arg-to-op-error [op : Symbol] [v : Value])
-  (error 'interp "Bad argument to operator"))
+  (error 'interp "argumento incorrecto"))
 
 (define (bad-conditional-error [v : Value])
-  (error 'interp "no es booleano"))
+  (error 'interp "no es un valor booleano"))
 
 (define (unbound-id-error [id : Symbol])
-  (error 'interp (string-append
-                  "Unbound identifier: "
-                    (to-string id))))
+  (error 'interp "identificador no esta enlazado"))
 
 (define-type Binding
   (binding [name : Symbol] [value : Value]))
@@ -203,7 +201,7 @@
 ;;;;;;;;;;;;
 
 (define (parse-error e)
-  (error 'parse "malformed expression"))
+  (error 'parse "no es una funcion"))
 
 (define (parse [in : S-Exp]) : ExprS
   (cond
