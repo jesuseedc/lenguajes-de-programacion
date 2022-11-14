@@ -78,21 +78,3 @@ while True:
     tok = lexer.token()
     if not tok: break      # No hay más tokens
     print(tok)
-
-
-
-
-
-
-
-
-
-
-    
-
-    
-
-
-
-
-

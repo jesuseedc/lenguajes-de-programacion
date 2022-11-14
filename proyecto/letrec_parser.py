@@ -30,9 +30,9 @@ def p_exp_diff(p):
     '''exp : LPAREN DIFF exp exp RPAREN'''
     p[0] = ('diff-exp', p[3], p[4])
 
-"""def p_exp_zero(p):
-    '''exp : LPAREN ZERO? exp RPAREN'''
-    p[0] = ('zero?-exp', p[3])"""
+def p_exp_zero(p):
+    '''exp : LPAREN ZERO exp RPAREN'''
+    p[0] = ('zero?-exp', p[3])
 
 def p_exp_if(p):
     '''exp : LPAREN IF exp exp exp RPAREN'''
@@ -68,5 +68,3 @@ if __name__ == '__main__':
     prog = open(sys.argv[1]).read()
     result = parser.parse(prog)
     print(result)
-
-# Path: proyecto\letrec-lexer.py
