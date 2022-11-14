@@ -58,13 +58,29 @@ def p_exp_letrec(p):
     '''exp : LPAREN LETREC VAR VAR exp exp RPAREN'''
     p[0] = ('letrec-exp', p[3], p[4], p[5], p[6])
 
+def p_exp_else(p):
+    '''exp : exp ELSE exp'''
+    p[0] = ('else-exp', p[1], p[3])
+
+def p_exp_in(p):
+    '''exp : exp IN exp'''
+    p[0] = ('in-exp', p[1], p[3])
+
+def p_exp_then(p):
+    '''exp : exp THEN exp'''
+    p[0] = ('then-exp', p[1], p[3])
+
 def p_error(p):
     print("Syntax error in input!")
 
 parser = yacc.yacc()
 
-if __name__ == '__main__':
-    import sys
-    prog = open(sys.argv[1]).read()
-    result = parser.parse(prog)
+# Prueba del analizador sintáctico
+while True: 
+    try:
+        s = input('calc > ')
+    except EOFError:
+        break
+    if not s: continue
+    result = parser.parse(s)
     print(result)

@@ -27,7 +27,8 @@ reserved = {
     'in' : 'IN',
     'proc' : 'PROC',
     'letrec' : 'LETREC',
-    'zero?' : 'ZERO'
+    'zero?' : 'ZERO',
+    'call' : 'CALL'
 }
 
 # Lista de tokens
