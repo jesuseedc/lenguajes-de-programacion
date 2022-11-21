@@ -37,25 +37,30 @@ tokens = [
     'RPAREN',
     'DIFF',
     'CONST',
-    'VAR'
+    'VAR',
+    'EQUAL',
+    'COMMA'
 ] + list(reserved.values())
 
 # Expresiones regulares para tokens simples
 t_LPAREN = r'\('
 t_RPAREN = r'\)'
 t_DIFF = r'-'
-t_CONST = r'\d+'
+t_EQUAL = r'='
+t_COMMA = r','
+t_VAR = r'[a-zA-Z_][a-zA-Z0-9_]*'
 
-# Expresiones regulares con acciones semánticas
-def t_VAR(t):
-    r'[a-zA-Z_][a-zA-Z_0-9]*'
-    t.type = reserved.get(t.value,'VAR')    # Checar palabras reservadas
+# Expresiones regulares para tokens complejos
+def t_CONST(t):
+    r'\d+'
+    t.value = int(t.value)
     return t
 
-# Expresiones regulares ignoradas
-t_ignore = " \t"
+# Ignorar espacios en blanco
+t_ignore = ' \t'
 
-# Manejador de errores
+
+# Manejar errores
 def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
@@ -64,18 +69,23 @@ def t_error(t):
 lexer = lex.lex()
 
 # Prueba del analizador léxico
+def test_lexer ( data ):
+    lexer.input(data)
+    while True:
+        tok = lexer.token()
+        if not tok:
+            break
+        print(tok)
+
+# Prueba de entrada
 data = '''
-(letrec fact (n)
-    (if (zero? n)
-        1
-        (- n (fact (- n 1)))))
+letrec double(x) =
+   if zero?(x)
+   then 0
+   else -((double -(x, 1)), -2)
+in (double 6)
 '''
 
-# Prueba del analizador léxico
-lexer.input(data)
+# Prueba
+test_lexer(data)
 
-# Tokenize
-while True:
-    tok = lexer.token()
-    if not tok: break      # No hay más tokens
-    print(tok)

@@ -3,3 +3,6 @@ _pycache_
 
 # Ignora .out
 .out
+
+# ignora parsetab.py
+parsetab.py
