@@ -31,7 +31,7 @@ class Env:
 
     def extend_rec(self, p_name, b_var, p_body):
         new_env = Env(self)
-        new_env.bindings[p_name] = ast.ProcVal(b_var, p_body, new_env)
+        new_env.bindings[p_name] = ast.ProcExp(b_var, p_body, new_env)
         return new_env
 
     def apply_env(self, var):
