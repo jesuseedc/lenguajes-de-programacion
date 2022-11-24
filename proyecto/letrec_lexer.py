@@ -20,56 +20,67 @@ import ply.lex as lex
 
 # Lista de palabras reservadas
 reserved = {
-    'if' : 'IF',
-    'then' : 'THEN',
-    'else' : 'ELSE',
-    'let' : 'LET',
-    'in' : 'IN',
-    'proc' : 'PROC',
-    'letrec' : 'LETREC',
-    'zero?' : 'ZERO',
-    'call' : 'CALL'
+    "if": "IF",
+    "then": "THEN",
+    "else": "ELSE",
+    "let": "LET",
+    "in": "IN",
+    "proc": "PROC",
+    "letrec": "LETREC",
+    "zero?": "ZERO",
 }
 
 # Lista de tokens
 tokens = [
-    'LPAREN',
-    'RPAREN',
-    'DIFF',
-    'CONST',
-    'VAR',
-    'EQUAL',
-    'COMMA'
+    "LPAREN",
+    "RPAREN",
+    "DIFF",
+    "EQUAL",
+    "COMMA",
+    "ID",
+    "NUM",
 ] + list(reserved.values())
 
+
 # Expresiones regulares para tokens simples
-t_LPAREN = r'\('
-t_RPAREN = r'\)'
-t_DIFF = r'-'
-t_EQUAL = r'='
-t_COMMA = r','
-t_VAR = r'[a-zA-Z_][a-zA-Z0-9_]*'
+t_LPAREN = r"\("
+t_RPAREN = r"\)"
+t_DIFF = r"-"
+t_EQUAL = r"="
+t_COMMA = r","
 
 # Expresiones regulares para tokens complejos
-def t_CONST(t):
-    r'\d+'
+def t_NUM(t):
+    r"[+-]?\d+"
     t.value = int(t.value)
     return t
 
-# Ignorar espacios en blanco
-t_ignore = ' \t'
 
+def t_ID(t):
+    r"[a-zA-Z_][a-zA-Z0-9_?]*"
+    t.type = reserved.get(t.value, "ID")
+    return t
+
+
+# Ignorar espacios en blanco
+def t_newline(t):
+    r"\n+"
+    t.lexer.lineno += len(t.value)
+
+
+t_ignore = " \t"
 
 # Manejar errores
 def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
+
 # Construir el analizador léxico
 lexer = lex.lex()
 
 # Prueba del analizador léxico
-def test_lexer ( data ):
+def test_lexer(data):
     lexer.input(data)
     while True:
         tok = lexer.token()
@@ -77,15 +88,22 @@ def test_lexer ( data ):
             break
         print(tok)
 
+
 # Prueba de entrada
-data = '''
+data = """
 letrec double(x) =
    if zero?(x)
    then 0
    else -((double -(x, 1)), -2)
 in (double 6)
-'''
+"""
 
-# Prueba
-test_lexer(data)
+data2 = """
+letrec double(x) =
+    if zero?(x)
+    then 0
+    else -((double -(x, 1)), -2)
+in (double 6)
+"""
 
+test_lexer(data2)
