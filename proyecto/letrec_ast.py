@@ -96,3 +96,14 @@ class LetrecExp(LetrecExp):
 
     def __repr__(self):
         return f"<Letrec {self.p_name}({self.b_var}) = {self.p_body} in {self.letrec_body}>"
+
+class ProcVal:
+    def __init__(self, var, body, env):
+        self.var = var
+        self.body = body
+        self.env = env
+
+    def __repr__(self):
+        return f"<ProcVal {self.var} => {self.body} in {self.env}>"
+
+        

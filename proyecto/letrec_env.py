@@ -31,7 +31,7 @@ class Env:
 
     def extend_rec(self, p_name, b_var, p_body):
         new_env = Env(self)
-        new_env.bindings[p_name] = ast.ProcExp(b_var, p_body, new_env)
+        new_env.bindings[p_name] = ast.ProcVal(b_var, p_body, new_env)
         return new_env
 
     def apply_env(self, var):
@@ -42,14 +42,50 @@ class Env:
         else:
             raise Exception("Variable %s no definida" % var)
 
+    def extend_env(self, var, val):
+        new_env = Env(self)
+        new_env[var] = val
+        return new_env
+
+    def extend_env_rec(self, p_name, b_var, p_body):
+        new_env = Env(self)
+        new_env.bindings[p_name] = ast.ProcVal(b_var, p_body, new_env)
+        return new_env
+
+    def empty_env():
+        return Env()
+
+
+
 # Pruebas de entorno
 
-env = Env()
-env['x'] = 1
-env['y'] = 2
-env['z'] = 3
-print(env)
+def test_env():
+    env = Env()
+    env["x"] = 1
+    env["y"] = 2
+    env["z"] = 3
+    assert env["x"] == 1
+    assert env["y"] == 2
+    env2 = env.extend("z", 3)
+    assert env2["x"] == 1
+    assert env2["y"] == 2
+    assert env2["z"] == 3
+    assert env["z"] == 3
+    env3 = env2.extend("x", 4)
+    assert env3["x"] == 4
+    assert env3["y"] == 2
+    assert env3["z"] == 3
+    assert env2["x"] == 1
+    assert env2["y"] == 2
+    assert env2["z"] == 3
+    assert env["x"] == 1
+    assert env["y"] == 2
+    assert env["z"] == 3
+    print("env3:", env3)
+    print("env2:", env2)
+    print("env:", env)
 
+test_env()
 
 
 

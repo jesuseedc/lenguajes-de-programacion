@@ -73,7 +73,10 @@ def p_error(p):
 
 parser = yacc.yacc()
 
+def parse(s):
+    return parser.parse(s)
 
+"""
 def tests():
     while True:
         try:
@@ -85,6 +88,6 @@ def tests():
         result = parser.parse(s)
         print(result)
 
-
-if __name__ == "__main__":
-    tests()
+"""
+#if __name__ == "__main__":
+ #   tests()
