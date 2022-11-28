@@ -57,37 +57,6 @@ class Env:
 
 
 
-# Pruebas de entorno
-
-def test_env():
-    env = Env()
-    env["x"] = 1
-    env["y"] = 2
-    env["z"] = 3
-    assert env["x"] == 1
-    assert env["y"] == 2
-    env2 = env.extend("z", 3)
-    assert env2["x"] == 1
-    assert env2["y"] == 2
-    assert env2["z"] == 3
-    assert env["z"] == 3
-    env3 = env2.extend("x", 4)
-    assert env3["x"] == 4
-    assert env3["y"] == 2
-    assert env3["z"] == 3
-    assert env2["x"] == 1
-    assert env2["y"] == 2
-    assert env2["z"] == 3
-    assert env["x"] == 1
-    assert env["y"] == 2
-    assert env["z"] == 3
-    print("env3:", env3)
-    print("env2:", env2)
-    print("env:", env)
-
-test_env()
-
-
 
 
 

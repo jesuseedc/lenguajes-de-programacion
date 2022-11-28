@@ -59,8 +59,8 @@ def value_of(exp, env):
     elif isinstance(exp, VarExp):
         return Env.apply_env(env, exp.var)
     elif isinstance(exp, DiffExp):
-        val1 = value_of(exp.exp1, env)
-        val2 = value_of(exp.exp2, env)
+        val1 = value_of(exp.left, env)
+        val2 = value_of(exp.right, env)
         return NumVal(expval_to_num(val1) - expval_to_num(val2))
     elif isinstance(exp, ZeroPExp):
         val1 = value_of(exp.exp1, env)
@@ -88,33 +88,24 @@ def value_of(exp, env):
 def apply_procedure(proc, arg):
     return value_of(proc.body, Env.extend_env(proc.env, proc.var, arg))
 
-if __name__ == "__main__":
-    from letrec_parser import parse
-    from letrec_env import Env
-
-    def test(exp):
-        print(f"{exp} = {value_of(parse(exp), Env.empty_env())}")
-
-    test("1")
-    test("x")
-    test("(diff 1 2)")
-    test("(zero? 0)")
-    test("(zero? 1)")
-    test("(if (zero? 0) 1 2)")
-    test("(if (zero? 1) 1 2)")
-    test("(let ((x 1)) x)")
-    test("(let ((x 1)) (diff x 2))")
-    test("(let ((x 1)) (zero? x))")
-    test("(let ((x 1)) (if (zero? x) 1 2))")
-    test("(let ((x 1)) (if (zero? (diff x 1)) 1 2))")
-    test("((proc (x) x) 1)")
-    test("((proc (x) (diff x 1)) 1)")
-    test("((proc (x) (zero? x)) 1)")
-    test("((proc (x) (if (zero? x) 1 2)) 1)")
-    test("((proc (x) (if (zero? (diff x 1)) 1 2)) 1)")
-    test("(letrec ((p (proc (x) (if (zero? x) 1 (p (diff x 1)))))) (p 1))")
-    test("(letrec ((p (proc (x) (if (zero? x) 1 (p (diff x 1)))))) (p 2))")
-    test("(letrec ((p (proc (x) (if (zero? x) 1 (p (diff x 1)))))) (p 3))")
-    test("(letrec ((p (proc (x) (if (zero? x) 1 (p (diff x 1)))))) (p 4))")
-    test("(letrec ((p (proc (x) (if (zero? x) 1 (p (diff x 1)))))) (p 5))")
-    test("(letrec ((p (proc (x) (if (zero? x) 1 (p (diff x 1)))))) (p 6))")
+def test():
+    env = Env.empty_env()
+    env = Env.extend_env(env, "x", NumVal(3))
+    env = Env.extend_env(env, "y", NumVal(4))
+    env = Env.extend_env(env, "z", NumVal(5))
+    env = Env.extend_env(env, "f", ProcVal(Procedure("x", DiffExp(VarExp("x"), ConstExp(1)), env)))
+    env = Env.extend_env(env, "g", ProcVal(Procedure("x", DiffExp(VarExp("x"), ConstExp(2)), env)))
+    env = Env.extend_env(env, "h", ProcVal(Procedure("x", DiffExp(VarExp("x"), ConstExp(3)), env)))
+    env = Env.extend_env(env, "k", ProcVal(Procedure("x", DiffExp(VarExp("x"), ConstExp(4)), env)))
+    env = Env.extend_env(env, "p", ProcVal(Procedure("x", DiffExp(VarExp("x"), ConstExp(5)), env)))
+    env = Env.extend_env(env, "q", ProcVal(Procedure("x", DiffExp(VarExp("x"), ConstExp(6)), env)))
+    env = Env.extend_env(env, "r", ProcVal(Procedure("x", DiffExp(VarExp("x"), ConstExp(7)), env)))
+    env = Env.extend_env(env, "s", ProcVal(Procedure("x", DiffExp(VarExp("x"), ConstExp(8)), env)))
+    env = Env.extend_env(env, "t", ProcVal(Procedure("x", DiffExp(VarExp("x"), ConstExp(9)), env)))
+    env = Env.extend_env(env, "u", ProcVal(Procedure("x", DiffExp(VarExp("x"), ConstExp(10)), env)))
+    env = Env.extend_env(env, "v", ProcVal(Procedure("x", DiffExp(VarExp("x"), ConstExp(11)), env)))
+    env = Env.extend_env(env, "w", ProcVal(Procedure("x", DiffExp(VarExp("x"), ConstExp(12)), env)))
+    env = Env.extend_env(env, "a", ProcVal(Procedure("x", DiffExp(VarExp("x"), ConstExp(13)), env)))
+    print(env)
+    
+test()
