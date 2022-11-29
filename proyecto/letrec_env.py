@@ -52,6 +52,9 @@ class Env:
         new_env.bindings[p_name] = ast.ProcVal(b_var, p_body, new_env)
         return new_env
 
+    def lookup_env(env, var):
+        return env[var]
+
     def empty_env():
         return Env()
 
