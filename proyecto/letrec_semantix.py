@@ -54,61 +54,42 @@ def expval_to_proc(expval):
         raise TypeError(f"Expected ProcVal, got {expval}")
 
 def value_of(exp, env):
-    try:
+    try: 
         if isinstance(exp, ConstExp):
             return NumVal(exp.num)
-        elif isinstance(exp, VarExp):
-            return Env.apply_env(env, exp.var)
         elif isinstance(exp, DiffExp):
-            val1 = value_of(exp.left, env)
-            val2 = value_of(exp.right, env)
-            return NumVal(expval_to_num(val1) - expval_to_num(val2))
+            return NumVal(expval_to_num(value_of(exp.left, env)) - expval_to_num(value_of(exp.right, env)))
         elif isinstance(exp, ZeroPExp):
-            val1 = value_of(exp.exp1, env)
-            return BoolVal(expval_to_num(val1) == 0)
+            return BoolVal(expval_to_num(value_of(exp.exp, env)) == 0)
         elif isinstance(exp, IfExp):
-            val1 = value_of(exp.exp1, env)
-            if expval_to_bool(val1):
-                return value_of(exp.exp2, env)
+            if expval_to_bool(value_of(exp.cond, env)):
+                return value_of(exp.thenb, env)
             else:
-                return value_of(exp.exp3, env)
+                return value_of(exp.elseb, env)
+        elif isinstance(exp, VarExp):
+            return Env.lookup_env(env, exp.var)
         elif isinstance(exp, LetExp):
-            val1 = value_of(exp.exp1, env)
-            return value_of(exp.body, Env.extend_env(env, exp.var, val1))
+            return value_of(exp.body, Env.extend_env(env, exp.var, value_of(exp.exp, env)))
         elif isinstance(exp, ProcExp):
             return ProcVal(Procedure(exp.var, exp.body, env))
         elif isinstance(exp, CallExp):
-            proc = expval_to_proc(value_of(exp.op, env))
-            arg = value_of(exp.arg, env)
-            return apply_procedure(proc, arg)
+            return apply_procedure(expval_to_proc(value_of(exp.op, env)), value_of(exp.arg, env))
         elif isinstance(exp, LetrecExp):
-            return value_of(exp.letrec_body, Env.extend_env_rec(env, exp.p_name, exp.b_var, exp.p_body))
+            return value_of(exp.letrec_body, Env.extend_env(env, exp.p_name, ProcVal(Procedure(exp.b_var, exp.p_body, env))))
         else:
             raise TypeError(f"Unknown expression type {exp}")
     except TypeError as e:
-        print(e)
+        print(f"Error: {e}")
+        return None
+        
 
 def apply_procedure(proc, arg):
     return value_of(proc.body, Env.extend_env(proc.env, proc.var, arg))
 
-
-# Pruebas
+def test():
+    env = Env.empty_env()
+    print(value_of(LetrecExp("fact", "n", IfExp(ZeroPExp(VarExp("n")), ConstExp(1), DiffExp(VarExp("n"), ConstExp(1))), CallExp(VarExp("fact"), ConstExp(5))), env))
 
 if __name__ == "__main__":
-    from letrec_parser import parse
-    from letrec_env import Env
+    test()
 
-    data = """
-    letrec double(x) =
-        if zero?(x)
-        then 0
-        else -((double -(x, 1)), -2)
-    in (double 6)
-    """
-
-    def test(data):
-        exp = parse(data)
-        print(exp)
-        print(value_of(exp, Env.empty_env()))
-
-    test(data)
