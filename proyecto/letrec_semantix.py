@@ -53,6 +53,9 @@ def expval_to_proc(expval):
     else:
         raise TypeError(f"Expected ProcVal, got {expval}")
 
+def apply_procedure(proc, arg):
+    return value_of(proc.body, Env.extend_env(proc.env, proc.var, arg))
+
 def value_of(exp, env):
     try: 
         if isinstance(exp, ConstExp):
@@ -81,15 +84,11 @@ def value_of(exp, env):
     except TypeError as e:
         print(f"Error: {e}")
         return None
-        
 
-def apply_procedure(proc, arg):
-    return value_of(proc.body, Env.extend_env(proc.env, proc.var, arg))
 
 def test():
     env = Env.empty_env()
-    print(value_of(LetrecExp("fact", "n", IfExp(ZeroPExp(VarExp("n")), ConstExp(1), DiffExp(VarExp("n"), ConstExp(1))), CallExp(VarExp("fact"), ConstExp(5))), env))
-
+    print(value_of(LetrecExp("fact", "n", IfExp(ZeroPExp(VarExp("n")), ConstExp(2500), DiffExp(VarExp("n"), ConstExp(1))), CallExp(VarExp("fact"), ConstExp(0))), env))
+    
 if __name__ == "__main__":
     test()
-
