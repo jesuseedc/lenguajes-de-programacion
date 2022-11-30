@@ -37,3 +37,10 @@ class Proc:
 
     def __repr__(self):
         return f"λ{self.var}.{self.body} in {self.env}"
+
+class ErrorVal(ExpVal):
+    def __init__(self, error):
+        self.error = error
+
+    def __repr__(self):
+        return f"{self.error}"

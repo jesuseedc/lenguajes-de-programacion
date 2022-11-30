@@ -12,7 +12,7 @@ from letrec_ast import (
     ZeroPExp,
 )
 from letrec_env import Env
-from letrec_vals import NumVal, BoolVal, ProcVal, Proc
+from letrec_vals import NumVal, BoolVal, ProcVal, Proc, ErrorVal
 
 
 def expval_to_num(expval):
@@ -39,9 +39,11 @@ def expval_to_proc(expval):
 def apply_procedure(proc, arg):
     return value_of(proc.body, Env.extend_env(proc.env, proc.var, arg))
 
+debug = False
 
 def value_of(exp, env):
-    # print(f"value of {exp} in environment {env}")
+    if(debug):
+        print(f"value of {exp} in environment {env}")
     if isinstance(exp, ConstExp):
         return NumVal(exp.num)
     elif isinstance(exp, DiffExp):
@@ -73,15 +75,18 @@ def value_of(exp, env):
         )
     else:
         raise TypeError(f"Unknown expression type {exp}")
-
-
+        
 def run_program(exp):
     try:
         return value_of(exp, Env.empty_env())
+    except TypeError as e:
+        print(f"Ocurrió un error!: {e}")
+        return ErrorVal(e)
+        """
     except Exception as e:
         print(f"Ocurrió un error!: {e}")
         return None
-
+        """
 
 def test():
     env = Env.empty_env()
@@ -100,7 +105,6 @@ def test():
             env,
         )
     )
-
 
 # if __name__ == "__main__":
 #     test()
