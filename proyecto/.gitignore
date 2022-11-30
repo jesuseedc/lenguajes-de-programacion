@@ -1,0 +1,8 @@
+# Ignora _pycache_
+_pycache_
+
+# Ignora .out
+.out
+
+# ignora parsetab.py
+parsetab.py
