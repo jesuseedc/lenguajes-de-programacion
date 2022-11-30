@@ -20,62 +20,90 @@ import ply.lex as lex
 
 # Lista de palabras reservadas
 reserved = {
-    'if' : 'IF',
-    'then' : 'THEN',
-    'else' : 'ELSE',
-    'let' : 'LET',
-    'in' : 'IN',
-    'proc' : 'PROC',
-    'letrec' : 'LETREC',
-    'zero?' : 'ZERO',
-    'call' : 'CALL'
+    "if": "IF",
+    "then": "THEN",
+    "else": "ELSE",
+    "let": "LET",
+    "in": "IN",
+    "proc": "PROC",
+    "letrec": "LETREC",
+    "zero?": "ZERO",
 }
 
 # Lista de tokens
 tokens = [
-    'LPAREN',
-    'RPAREN',
-    'DIFF',
-    'CONST',
-    'VAR'
+    "LPAREN",
+    "RPAREN",
+    "DIFF",
+    "EQUAL",
+    "COMMA",
+    "ID",
+    "NUM",
 ] + list(reserved.values())
 
-# Expresiones regulares para tokens simples
-t_LPAREN = r'\('
-t_RPAREN = r'\)'
-t_DIFF = r'-'
-t_CONST = r'\d+'
 
-# Expresiones regulares con acciones semánticas
-def t_VAR(t):
-    r'[a-zA-Z_][a-zA-Z_0-9]*'
-    t.type = reserved.get(t.value,'VAR')    # Checar palabras reservadas
+# Expresiones regulares para tokens simples
+t_LPAREN = r"\("
+t_RPAREN = r"\)"
+t_DIFF = r"-"
+t_EQUAL = r"="
+t_COMMA = r","
+
+# Expresiones regulares para tokens complejos
+def t_NUM(t):
+    r"[+-]?\d+"
+    t.value = int(t.value)
     return t
 
-# Expresiones regulares ignoradas
+
+def t_ID(t):
+    r"[a-zA-Z_][a-zA-Z0-9_?]*"
+    t.type = reserved.get(t.value, "ID")
+    return t
+
+
+# Ignorar espacios en blanco
+def t_newline(t):
+    r"\n+"
+    t.lexer.lineno += len(t.value)
+
+
 t_ignore = " \t"
 
-# Manejador de errores
+# Manejar errores
 def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
+
 
 # Construir el analizador léxico
 lexer = lex.lex()
 
 # Prueba del analizador léxico
-data = '''
-(letrec fact (n)
-    (if (zero? n)
-        1
-        (- n (fact (- n 1)))))
-'''
+def test_lexer(data):
+    lexer.input(data)
+    while True:
+        tok = lexer.token()
+        if not tok:
+            break
+        print(tok)
 
-# Prueba del analizador léxico
-lexer.input(data)
 
-# Tokenize
-while True:
-    tok = lexer.token()
-    if not tok: break      # No hay más tokens
-    print(tok)
+# Prueba de entrada
+data = """
+letrec double(x) =
+   if zero?(x)
+   then 0
+   else -((double -(x, 1)), -2)
+in (double 6)
+"""
+
+data2 = """
+letrec double(x) =
+    if zero?(x)
+    then 0
+    else -((double -(x, 1)), -2)
+in (double 6)
+"""
+
+# test_lexer(data2)
