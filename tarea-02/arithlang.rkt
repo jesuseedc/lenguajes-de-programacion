@@ -1,25 +1,3 @@
-; Implementar un lenguaje aritmetico en plait
-; La implementacion debe incluir la definicion
-; de los procedimientos parse, desugar, interp,
-; y eval definida de la siguiente forma: 
-; (define (eval [input : S-Exp]) : Number
-;   (interp (desugar (parse input))))
-;
-; La siguiente definición de parse corresponde al
-; lenguaje núcleo (por lo que es incompleta e 
-; incorrecta), pero puede ser ilustrativa para 
-; implementar el procedimiento parse:
-;
-; (define (parse [s : S-Exp]) : ArithC
-;   (cond [(s-exp-number? s) (numC (s-exp-number s))]
-;         [(s-exp-list? s)
-;          (let ([ls (s-exp->list s)])
-;            (case (s-exp->symbol (first ls))
-;              [(+) (plusC (parse (second ls)) (parse (third ls)))]
-;              [(-) (minusC (parse (second ls)) (parse (third ls)))]
-;              [else (error 'parse "operación aritmetica malformada")]))]
-;         [else (error 'parse "expresión aritmetica malformada")]))
-
 #lang plait
 
 
