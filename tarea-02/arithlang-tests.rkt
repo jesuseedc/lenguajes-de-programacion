@@ -1,12 +1,6 @@
-; Las pruebas deben realizarse
-; sobre eval, no sobre parse,
-; desugar o interp. 
-
 #lang plait
 
 (require "arithlang.rkt")
-; Ejemplo de prueba de
-; una función.
 
 (test (eval `(+ 1 2)) 3)
 (test (eval `(* (+ 1 2) 3)) 9)
